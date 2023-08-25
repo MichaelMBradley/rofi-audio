@@ -12,15 +12,31 @@ class AudioMenu(rofi_menu.Menu):
         """Creates a list of available sinks."""
         super().__init__(**kwargs)
 
-        self.prompt = "Select default sink:"
+        self.prompt = "Select default sink/source:"
 
-        self.items = []
+        self.items = [rofi_menu.Item("--- Sinks ---", nonselectable=True)]
         for sink in pactl.parse_all_sinks():
-            kwargs = {'flags': [rofi_menu.FLAG_STYLE_URGENT]} if sink.current else {}
+            item_kwargs = {}
+            if sink.current:
+                item_kwargs['flags'] = [rofi_menu.FLAG_STYLE_URGENT]
             self.items.append(
                 rofi_menu.ShellItem(
-                    sink.description,
+                    f"  {sink.description}",
                     sink.default_command,
-                    **kwargs
+                    show_output=True,
+                    **item_kwargs
+                )
+            )
+
+        self.items.append(rofi_menu.Item("-- Sources --", nonselectable=True))
+        for source in pactl.parse_all_sources():
+            item_kwargs = {}
+            if source.current:
+                item_kwargs['flags'] = [rofi_menu.FLAG_STYLE_URGENT]
+            self.items.append(
+                rofi_menu.ShellItem(
+                    f"  {source.description}",
+                    source.default_command,
+                    **item_kwargs
                 )
             )
