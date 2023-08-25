@@ -26,8 +26,10 @@ def get_sink_string_property(sink: str, prop: str) -> str | None:
 
 class Sink:
     def __init__(self, sink_data: str):
-        self.name = get_sink_string_attribute(sink_data, 'name')
-        self.description = get_sink_string_attribute(sink_data, 'description')
+        self.name = get_sink_string_attribute(sink_data, 'Name')
+        self.description = get_sink_string_attribute(sink_data, 'Description')
+        self.mute = get_sink_string_attribute(sink_data, 'Mute') != 'no'
+        self.current = get_sink_string_attribute(sink_data, 'State') == 'RUNNING'
 
     def __str__(self) -> str:
         return self.description or self.name or "No sink data available"
