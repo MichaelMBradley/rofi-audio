@@ -1,6 +1,11 @@
+import pathlib
+
 import rofi_menu
 
 import pactl
+
+
+CURRENT_ICON = pathlib.Path(__file__).parent / 'assets/current.svg'
 
 
 class AudioMenu(rofi_menu.Menu):
@@ -19,6 +24,7 @@ class AudioMenu(rofi_menu.Menu):
             item_kwargs = {}
             if sink.current:
                 item_kwargs['flags'] = [rofi_menu.FLAG_STYLE_URGENT]
+                item_kwargs['icon'] = CURRENT_ICON
             self.items.append(
                 rofi_menu.ShellItem(
                     f"  {sink.description}",
@@ -33,6 +39,7 @@ class AudioMenu(rofi_menu.Menu):
             item_kwargs = {}
             if source.current:
                 item_kwargs['flags'] = [rofi_menu.FLAG_STYLE_URGENT]
+                item_kwargs['icon'] = CURRENT_ICON
             self.items.append(
                 rofi_menu.ShellItem(
                     f"  {source.description}",
