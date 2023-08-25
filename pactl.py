@@ -2,11 +2,11 @@ import re
 import subprocess
 
 
-def list_sinks() -> str:
+def list_sinks_string() -> str:
     return subprocess.run(['pactl', 'list', 'sinks'], capture_output=True).stdout.decode()
 
 
-def split_sinks(all_sinks: str) -> list[str]:
+def split_sinks_string(all_sinks: str) -> list[str]:
     return re.split(r'Sink #\d+', all_sinks)[1:]
 
 
@@ -16,17 +16,26 @@ def regex_match_one(pattern: str | re.Pattern[str], string: str) -> str:
         return result.groups()[0]
 
 
-def get_sink_attribute(sink: str, attr: str) -> str | None:
+def get_sink_string_attribute(sink: str, attr: str) -> str | None:
     return regex_match_one(rf'\n\s+{attr}: ([^\n]+)', sink)
 
 
-def get_sink_property(sink: str, prop: str) -> str | None:
+def get_sink_string_property(sink: str, prop: str) -> str | None:
     return regex_match_one(rf'\n\s+{prop} = "([^\n]+)"\n', sink)
 
 
-def parse_sink(sink: str) -> dict[str, str | None]:
-    return {attr: get_sink_attribute(sink, attr) for attr in ['name', 'description']}
+class Sink:
+    def __init__(self, sink_data: str):
+        self.name = get_sink_string_attribute(sink_data, 'name')
+        self.description = get_sink_string_attribute(sink_data, 'description')
+
+    def __str__(self) -> str:
+        return self.description or self.name or "No sink data available"
+
+    @property
+    def default_command(self):
+        return f"pactl set-default-sink {self.name}"
 
 
-def parse_all_sinks() -> list[dict[str, str | None]]:
-    return list(map(parse_sink, split_sinks(list_sinks())))
+def parse_all_sinks() -> list[Sink]:
+    return list(map(Sink, split_sinks_string(list_sinks_string())))

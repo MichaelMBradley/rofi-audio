@@ -11,4 +11,4 @@ class AudioMenu(rofi_menu.Menu):
         """Creates a list of available sinks."""
         super().__init__(**kwargs)
 
-        self.items = [rofi_menu.Item(sink['name']) for sink in pactl.parse_all_sinks()]
+        self.items = [rofi_menu.ShellItem(sink.description, sink.default_command) for sink in pactl.parse_all_sinks()]
