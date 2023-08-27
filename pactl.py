@@ -3,8 +3,16 @@ import re
 import subprocess
 
 
+def run_pactl_command(args: list[str]) -> str:
+    return subprocess.run(['pactl', *args], capture_output=True).stdout.decode()
+
+
 def list_nodes_string(node: str) -> str:
-    return subprocess.run(['pactl', 'list', node], capture_output=True).stdout.decode()
+    return run_pactl_command(['list', node])
+
+
+def get_default_node(node: str) -> str:
+    return run_pactl_command([f'get-default-{node}'])
 
 
 def get_sink_strings() -> list[str]:
@@ -29,12 +37,18 @@ def get_property(sink: str, prop: str) -> str | None:
     return regex_match_one(rf'\n\s+{prop} = "([^\n]+)"\n', sink)
 
 
+CURRENT_SINK = get_default_node('sink').strip()
+CURRENT_SOURCE = get_default_node('source').strip()
+
+
 class Node(abc.ABC):
+    current: bool
+
     def __init__(self, sink_data: str):
         self.name = get_attribute(sink_data, 'Name')
         self.description = get_attribute(sink_data, 'Description')
         self.mute = get_attribute(sink_data, 'Mute') != 'no'
-        self.current = get_attribute(sink_data, 'State') == 'RUNNING'
+        self.current = False
 
     def __str__(self) -> str:
         return self.description or self.name or "No sink data available"
@@ -45,12 +59,20 @@ class Node(abc.ABC):
 
 
 class Sink(Node):
+    def __init__(self, sink_data: str):
+        super().__init__(sink_data)
+        self.current = self.name == CURRENT_SINK
+
     @property
     def default_command(self):
         return f"pactl set-default-sink {self.name}"
 
 
 class Source(Node):
+    def __init__(self, sink_data: str):
+        super().__init__(sink_data)
+        self.current = self.name == CURRENT_SOURCE
+
     @property
     def default_command(self):
         return f"pactl set-default-source {self.name}"
