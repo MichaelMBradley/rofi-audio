@@ -1,26 +1,32 @@
 import abc
 import re
 import subprocess
+import enum
+
+
+class NodeType(str, enum.Enum):
+    sink = 'sink'
+    source = 'source'
 
 
 def run_pactl_command(args: list[str]) -> str:
     return subprocess.run(['pactl', *args], capture_output=True).stdout.decode()
 
 
-def list_nodes_string(node: str) -> str:
-    return run_pactl_command(['list', node])
+def list_nodes_string(node: NodeType) -> str:
+    return run_pactl_command(['list', f"{node.value}s"])
 
 
-def get_default_node(node: str) -> str:
-    return run_pactl_command([f'get-default-{node}'])
+def get_default_node(node: NodeType) -> str:
+    return run_pactl_command([f'get-default-{node.value}'])
 
 
 def get_sink_strings() -> list[str]:
-    return re.split(r'Sink #\d+', list_nodes_string('sinks'))[1:]
+    return re.split(r'Sink #\d+', list_nodes_string(NodeType.sink))[1:]
 
 
 def get_source_strings() -> list[str]:
-    return re.split(r'Source #\d+', list_nodes_string('sources'))[1:]
+    return re.split(r'Source #\d+', list_nodes_string(NodeType.source))[1:]
 
 
 def regex_match_one(pattern: str | re.Pattern[str], string: str) -> str:
@@ -37,8 +43,8 @@ def get_property(sink: str, prop: str) -> str | None:
     return regex_match_one(rf'\n\s+{prop} = "([^\n]+)"\n', sink)
 
 
-CURRENT_SINK = get_default_node('sink').strip()
-CURRENT_SOURCE = get_default_node('source').strip()
+CURRENT_SINK = get_default_node(NodeType.sink).strip()
+CURRENT_SOURCE = get_default_node(NodeType.source).strip()
 
 
 class Node(abc.ABC):
