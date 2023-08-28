@@ -4,7 +4,7 @@ import subprocess
 import enum
 
 
-class NodeType(str, enum.Enum):
+class NodeType(enum.StrEnum):
     sink = 'sink'
     source = 'source'
 
